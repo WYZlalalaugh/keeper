@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.soft.keeper.mapper.RecordMapper">
+    <insert id="addBatch" parameterType="record">
+        insert into tb_record(device_id,fan_state,purify_state,sensor_state,
+        vocs,create_time)
+        values
+        <foreach collection="list" item="record" separator=",">
+            (#{record.device_id},#{record.fan_state},#{record.purify_state},#{record.sensor_state},
+            #{record.vocs},#{record.create_time})
+        </foreach>
+    </insert>
+    <select id="countRecord" resultType="map">
+        select count(1) count from tb_record where
+    date_format(create_time,'%y%m%d')=date_format(now(),'%y%m%d')
+    <if test="alarmType=='fan_state'">
+        and fan_state=0
+    </if>
+    <if test="alarmType=='purify_state'">
+        and purify_state=0
+    </if>
+    <if test="alarmType=='sensor_state'">
+        and sensor_state=0
+    </if>
+    <if test="alarmType=='None'">
+        and 1!=1
+    </if>
+    </select>
+    <select id="findAreaVocs" resultType="map">
+        select d.province,round(avg(r.vocs),2) avg_vocs from tb_record r left join
+            tb_device d on r.device_id=d.id
+        where date_format(r.create_time,'%y%m%d')=date_format(now(),'%y%m%d') and d.id!=0 group by d.province;
+    </select>
+
+
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.soft.keeper.mapper.DeviceMapper">
+    <insert id="addBatch" parameterType="deviceDetails">
+        insert into tb_device(fan_state,purify_state,sensor_state,
+                              alarm_state,network_type,province,longitude,
+        latitude,error_log,create_time)
+        values
+        <foreach collection="list" item="device" separator=",">
+            (#{device.fan_state},#{device.purify_state},#{device.sensor_state},
+            #{device.alarm_state},#{device.network_type},#{device.province},
+            #{device.longitude},#{device.latitude},#{device.error_log},#{device.create_time})
+        </foreach>
+    </insert>
+
+    <select id="findAll" resultType="deviceDetails">
+        select * from tb_device
+    </select>
+    <select id="groupByPro" resultType="map">
+        select province,alarm_state,count(1) count
+        from tb_device group by
+        province,alarm_state;
+    </select>
+    <select id="groupByAlarm" resultType="map">
+        select alarm_state,count(1) count from tb_device group by alarm_state having
+        alarm_state!=1;
+    </select>
+    <select id="findErrorLog" resultType="map">
+        select d.id,d.error_log,r.create_time
+        from tb_record r left join tb_device d on r.device_id=d.id where r.fan_state=0 or
+            r.purify_state=0 or r.sensor_state=0 order by r.create_time desc limit 40;
+    </select>
+    <select id="countNetworkNum" resultType="map">
+        select case network_type when 1 then '移动' when 2 then '联通' else '电信' end
+                   network,count(1) count from tb_device group by network_type;
+    </select>
+    <select id="groupByPro1" resultType="java.util.Map">
+        select province,count(1) count from tb_device group by province;
+    </select>
+    <select id="countNum" resultType="java.util.Map">
+        SELECT COUNT(1) count FROM tb_device;
+    </select>
+
+    <update id="updateById" parameterType="deviceDetails">
+        update tb_device  set fan_state=#{fan_state},purify_state=#{purify_state},
+                              sensor_state=#{sensor_state},alarm_state=#{alarm_state},
+                              error_log=#{error_log},update_time=#{update_time}
+        where id=#{id}
+    </update>
+</mapper>
